@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 import bcrypt from 'bcryptjs'
 
-interface Iuser extends Document {
+export interface Iuser extends Document {
     firstName: string
     lastName: string
     email: string
@@ -9,9 +9,34 @@ interface Iuser extends Document {
     lastToken: string
     phone: string
     adress: string
-    cep: string
     role: string
+    cep: string
+    state: string
+    city: string
+    neighborhood: string
+    adressNumber: string
+    street: string
+    location: Ilocation
 }
+
+export interface Ilocation extends Document {
+    type: string
+    coordinates: Array<number>
+}
+
+const locationSchema: Schema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ['Point'],
+        required: true
+    },
+    coordinates: {
+        type: [Number],
+        required: true
+    }
+}, { _id: false })
+
+export const location = mongoose.model<Ilocation>('Location', locationSchema)
 
 const userSchema: Schema = new mongoose.Schema({
     firstName: {
@@ -38,19 +63,35 @@ const userSchema: Schema = new mongoose.Schema({
         type: String,
         required: [true, 'Telefone é um campo obrigatório']
     },
-    adress: {
-        type: String,
-        required: [true, 'Endereço é um campo obrigatório']
-    },
     cep: {
         type: String,
-        required: [true, 'CEP é um campo obrigatório']
+        required: [true, 'CEP é um campo obrigatório'],
+        maxlength: [8, 'CEP em formato inválido']
+    },
+    state: {
+        type: String
+    },
+    city: {
+        type: String
+    },
+    neighborhood: {
+        type: String
+    },
+    adressNumber: {
+        type: String
+    },
+    street: {
+        type: String
+    },
+    location: {
+        type: locationSchema
     },
     role: {
         type: String,
         enum: {
-            values: ['owner', 'player']
-        }
+            values: ['owner', 'user']
+        },
+        required: [true, 'Tipo de usuário deve ser informado']
     }
 }, { timestamps: true })
 
@@ -60,7 +101,5 @@ userSchema.pre<Iuser>('save', function (next) {
     }
     next()
 })
-
-
 
 export default mongoose.model<Iuser>('User', userSchema)

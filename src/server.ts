@@ -1,9 +1,8 @@
+import 'dotenv/config'
 import App from './app'
-import dotenv from 'dotenv'
 import Log from './libs/logger'
 import connection from './database/connection'
-dotenv.config()
-const { NODE_ENV } = process.env
+import CONFIG from './config/api'
 
 process.on('uncaughtException', (error: Error) => {
     Log.error(`UncaughtException event: ${error && error.message}`, {
@@ -16,16 +15,12 @@ process.on('unhandledRejection', (reason, promise: Promise<any>) => {
     Log.warn(`unhandledRejection event: ${JSON.stringify(reason)}`)
 })
 
-connection().then((con) => {
-    App.listen(3000, (error: any): void => {
-        if (error) {
-            Log.error(`Error while starting server, ${error && error.message}`)
-            throw error
-        }
-        Log.info(`Server started on PORT: ${3000}, ENV: ${NODE_ENV}`)
-        return
+connection()
+    .then((con) => {
+        App.listen(CONFIG.api.port)
+        Log.info(`Server started on port: ${CONFIG.api.port}, ENV: ${CONFIG.api.env}`)
     })
-}).catch((error) => {
-    Log.error(`Error while connecting database, ${error && error.message}`)
-    throw error
-})
+    .catch((error) => {
+        Log.error(`Error while connecting database, ${error && error.message}`)
+        process.exit(1)
+    })
